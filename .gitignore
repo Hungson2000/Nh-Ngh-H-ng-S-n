@@ -5,3 +5,6 @@ python/venv
 backend/.env
 python/.env
 .DS_Store
+python/.env
+python/venv/
+python/*.xlsx
