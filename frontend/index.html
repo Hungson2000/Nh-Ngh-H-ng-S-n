@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhà Nghỉ Hùng Sơn</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script type="module" src="js/firebase-init.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===== TRANG KHÁCH ===== -->
+<div id="guestPage" class="page active">
+  <header>
+    <div class="logo">Nhà Nghỉ Hùng Sơn</div>
+    <div style="display:flex;align-items:center">
+      <button class="hamburger" id="hamburger" onclick="toggleMobileNav()" aria-label="Menu"><span></span><span></span><span></span></button>
+      <nav id="mainNav">
+        <a href="javascript:void(0)" onclick="goSection('rooms')" data-vi="Phòng" data-en="Rooms">Phòng</a>
+        <a href="javascript:void(0)" onclick="goSection('booking')" data-vi="Đặt phòng" data-en="Book Now">Đặt phòng</a>
+        <a href="javascript:void(0)" onclick="goSection('services')" data-vi="Dịch vụ" data-en="Services">Dịch vụ</a>
+        <a href="javascript:void(0)" onclick="goSection('faq')" data-vi="FAQ" data-en="FAQ">FAQ</a>
+        <a href="javascript:void(0)" onclick="goSection('reviews')" data-vi="Đánh giá" data-en="Reviews">Đánh giá</a>
+      </nav>
+      <button class="lang-btn active" id="btnVI" onclick="setLang('vi')">🇻🇳 VI</button>
+      <button class="lang-btn" id="btnEN" onclick="setLang('en')">🇬🇧 EN</button>
+      <button class="admin-btn" onclick="showPage('adminPage')" data-vi="Quản lý ↗" data-en="Admin ↗">Quản lý ↗</button>
+      <button class="admin-btn" style="margin-left:8px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.75)" onclick="showPage('customerPage')" data-vi="🔍 Tra cứu" data-en="🔍 Lookup">🔍 Tra cứu đặt phòng</button>
+    </div>
+  </header>
+
+  <!-- PROMO BANNER (hiện khi có khuyến mãi) -->
+  <div class="promo-banner" id="promoBanner" style="display:none">
+    <div class="promo-text">🎉 Khuyến mãi hôm nay: <strong id="promoDiscount"></strong> cho <span id="promoRoom"></span></div>
+    <div class="promo-tag" id="promoLabel"></div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-tag" data-vi="Thừa Thiên Huế" data-en="Thua Thien Hue, Vietnam">Thừa Thiên Huế</div>
+    <h2 data-vi="Thoải mái · Sạch sẽ · Giá tốt" data-en="Comfortable · Clean · Affordable">Thoải mái · Sạch sẽ · Giá tốt</h2>
+    <div class="hero-divider"></div>
+    <p data-vi="Nghỉ ngơi thư giãn giữa vùng đất cố đô yên bình" data-en="Relax in the peaceful ancient capital of Vietnam">Nghỉ ngơi thư giãn giữa vùng đất cố đô yên bình</p>
+  </div>
+
+  <section class="rooms-section" id="rooms">
+    <div class="sec-title" data-vi="Danh sách phòng" data-en="Our Rooms">Danh sách phòng</div>
+    <div class="sec-sub" data-vi="Lựa chọn phòng phù hợp với nhu cầu của bạn" data-en="Choose the room that suits your needs">Lựa chọn phòng phù hợp với nhu cầu của bạn</div>
+    <div class="rooms-grid">
+      <div class="room-card" onclick="selectRoom('Phòng đơn')">
+        <div class="room-img single">🛏<div class="room-badge" data-vi="Phổ biến" data-en="Popular">Phổ biến</div></div>
+        <div class="room-body">
+          <div class="room-name" data-vi="Phòng Đơn" data-en="Single Room">Phòng Đơn</div>
+          <div class="room-price">200.000đ / <span data-vi="đêm" data-en="night">đêm</span></div>
+          <div class="room-avail" id="availSingle">
+            <div class="avail-dot green"></div>
+            <span class="avail-text" data-vi="Còn " data-en="Available: ">Còn </span>
+            <span class="avail-count" id="countSingle">5</span>
+            <span data-vi=" phòng trống" data-en=" rooms"> phòng trống</span>
+          </div>
+          <div class="room-desc" data-vi="Phòng tiện nghi dành cho 1 người, không gian yên tĩnh và thoáng mát." data-en="Cozy room for 1 person, quiet and airy space.">Phòng tiện nghi dành cho 1 người, không gian yên tĩnh và thoáng mát.</div>
+          <div class="room-features"><span class="ftag">Wifi</span><span class="ftag" data-vi="Điều hòa" data-en="A/C">Điều hòa</span><span class="ftag" data-vi="Nước nóng" data-en="Hot water">Nước nóng</span></div>
+          <button class="btn-gallery" onclick="event.stopPropagation();openGallery('single')">📷 Xem ảnh phòng</button>
+          <button class="btn-book" data-vi="Đặt ngay" data-en="Book Now">Đặt ngay</button>
+        </div>
+      </div>
+      <div class="room-card" onclick="selectRoom('Phòng đôi')">
+        <div class="room-img double">🛏🛏</div>
+        <div class="room-body">
+          <div class="room-name" data-vi="Phòng Đôi" data-en="Double Room">Phòng Đôi</div>
+          <div class="room-price">350.000đ / <span data-vi="đêm" data-en="night">đêm</span></div>
+          <div class="room-avail" id="availDouble">
+            <div class="avail-dot green"></div>
+            <span class="avail-text" data-vi="Còn " data-en="Available: ">Còn </span>
+            <span class="avail-count" id="countDouble">3</span>
+            <span data-vi=" phòng trống" data-en=" rooms"> phòng trống</span>
+          </div>
+          <div class="room-desc" data-vi="Phòng rộng rãi dành cho 2 người, đầy đủ tiện nghi và thoải mái." data-en="Spacious room for 2 people, fully equipped and comfortable.">Phòng rộng rãi dành cho 2 người, đầy đủ tiện nghi và thoải mái.</div>
+          <div class="room-features"><span class="ftag">Wifi</span><span class="ftag" data-vi="Điều hòa" data-en="A/C">Điều hòa</span><span class="ftag" data-vi="Nước nóng" data-en="Hot water">Nước nóng</span><span class="ftag">TV</span></div>
+          <button class="btn-gallery" onclick="event.stopPropagation();openGallery('double')">📷 Xem ảnh phòng</button>
+          <button class="btn-book" data-vi="Đặt ngay" data-en="Book Now">Đặt ngay</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- COMBO SECTION -->
+  <section class="combo-section" id="combo">
+    <div class="sec-title">Gói Combo Ưu Đãi</div>
+    <div class="sec-sub">Kết hợp phòng và dịch vụ — tiết kiệm hơn đặt riêng lẻ</div>
+    <div class="combo-grid">
+      <div class="combo-card" id="combo_sleep" onclick="selectCombo('sleep')">
+        <div class="combo-tag">Tiết kiệm 10%</div>
+        <div class="combo-icon">🌙</div>
+        <div class="combo-name">Combo Nghỉ Ngơi</div>
+        <div class="combo-items">✓ Phòng đơn 1 đêm<br>✓ Nước uống miễn phí<br>✓ Wifi tốc độ cao</div>
+        <div class="combo-price-row">
+          <span class="combo-price">180.000đ</span>
+          <span class="combo-old-price">200.000đ</span>
+          <span class="combo-save">-10%</span>
+        </div>
+      </div>
+      <div class="combo-card" id="combo_family" onclick="selectCombo('family')">
+        <div class="combo-tag">Tiết kiệm 12%</div>
+        <div class="combo-icon">👨‍👩‍👧</div>
+        <div class="combo-name">Combo Gia Đình</div>
+        <div class="combo-items">✓ Phòng đôi 1 đêm<br>✓ Bữa sáng cho 2 người<br>✓ Wifi & TV</div>
+        <div class="combo-price-row">
+          <span class="combo-price">308.000đ</span>
+          <span class="combo-old-price">350.000đ</span>
+          <span class="combo-save">-12%</span>
+        </div>
+      </div>
+      <div class="combo-card" id="combo_explore" onclick="selectCombo('explore')">
+        <div class="combo-tag">Phổ biến nhất</div>
+        <div class="combo-icon">🏍</div>
+        <div class="combo-name">Combo Khám Phá</div>
+        <div class="combo-items">✓ Phòng đơn 2 đêm<br>✓ Thuê xe máy 1 ngày<br>✓ Bản đồ điểm tham quan</div>
+        <div class="combo-price-row">
+          <span class="combo-price">450.000đ</span>
+          <span class="combo-old-price">520.000đ</span>
+          <span class="combo-save">-15%</span>
+        </div>
+      </div>
+      <div class="combo-card" id="combo_vip" onclick="selectCombo('vip')">
+        <div class="combo-tag">VIP</div>
+        <div class="combo-icon">⭐</div>
+        <div class="combo-name">Combo Nghỉ Dưỡng</div>
+        <div class="combo-items">✓ Phòng đôi 2 đêm<br>✓ Bữa sáng + bữa tối<br>✓ Đón/tiễn sân ga</div>
+        <div class="combo-price-row">
+          <span class="combo-price">750.000đ</span>
+          <span class="combo-old-price">870.000đ</span>
+          <span class="combo-save">-14%</span>
+        </div>
+      </div>
+    </div>
+    <div id="comboNote" style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center">
+      👉 Chọn gói combo để áp dụng vào form đặt phòng bên dưới
+    </div>
+  </section>
+
+  <section class="booking-section" id="booking">
+    <div class="sec-title">Đặt phòng</div>
+    <div class="sec-sub">Điền thông tin để chúng tôi xác nhận đặt phòng cho bạn</div>
+    <div class="booking-layout">
+      <div>
+        <div class="info-box">
+          <h3>Thông tin liên hệ</h3>
+          <div class="info-item"><div class="info-dot"></div><div class="info-text">📍 Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</div></div>
+          <div class="info-item"><div class="info-dot"></div><div class="info-text">📞 0352 055 348</div></div>
+          <div class="info-item"><div class="info-dot"></div><div class="info-text">Nhận phòng 14:00 — Trả phòng trước 12:00</div></div>
+          <div class="price-table">
+            <div class="price-row"><span class="price-label">Phòng đơn</span><span class="price-value">200.000đ / đêm</span></div>
+            <div class="price-row"><span class="price-label">Phòng đôi</span><span class="price-value">350.000đ / đêm</span></div>
+          </div>
+        </div>
+        <div class="calendar-box">
+          <h3>Lịch phòng còn trống</h3>
+          <div class="cal-nav">
+            <button onclick="changeMonth(-1)">‹ Trước</button>
+            <span class="cal-month" id="calMonth"></span>
+            <button onclick="changeMonth(1)">Sau ›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <div class="leg-item"><div class="leg-dot" style="background:rgba(192,57,43,0.35);border:1px solid rgba(192,57,43,0.4)"></div>Đã đặt</div>
+            <div class="leg-item"><div class="leg-dot" style="border:1px solid rgba(201,168,76,0.5)"></div>Hôm nay</div>
+            <div class="leg-item"><div class="leg-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1)"></div>Còn trống</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="booking-form">
+          <div class="form-title">Thông tin đặt phòng</div>
+          <div class="form-row">
+            <div class="form-group"><label data-vi="Họ tên" data-en="Full name">Họ tên</label><input type="text" id="gName" placeholder="Nguyễn Văn A"></div>
+            <div class="form-group"><label data-vi="Số điện thoại" data-en="Phone number">Số điện thoại</label><input type="tel" id="gPhone" placeholder="09xx xxx xxx"></div>
+          </div>
+          <div class="form-group"><label data-vi="Email (để nhận xác nhận)" data-en="Email (for confirmation)">Email (để nhận xác nhận)</label><input type="email" id="gEmail" placeholder="example@gmail.com"></div>
+          <div class="form-row">
+            <div class="form-group"><label data-vi="Ngày nhận phòng" data-en="Check-in date">Ngày nhận phòng</label><input type="date" id="gCheckin" onchange="calcPrice()"></div>
+            <div class="form-group"><label data-vi="Ngày trả phòng" data-en="Check-out date">Ngày trả phòng</label><input type="date" id="gCheckout" onchange="calcPrice()"></div>
+          </div>
+          <div class="form-group">
+            <label data-vi="Loại phòng" data-en="Room type">Loại phòng</label>
+            <select id="gRoom" onchange="calcPrice()"><option>Phòng đơn</option><option>Phòng đôi</option></select>
+          </div>
+          <div class="price-summary" id="priceSummary">
+            <div class="ps-row"><span class="ps-label" id="psNights"></span><span class="ps-val" id="psRate"></span></div>
+            <div class="ps-total"><span class="ps-total-label">Tổng tiền</span><span class="ps-total-val" id="psTotal"></span></div>
+          </div>
+          <div id="couponArea" style="display:none">
+            <div class="coupon-row">
+              <input class="coupon-input" id="couponInput" placeholder="Nhập mã giảm giá (VD: WELCOME10)" maxlength="20"
+                onkeydown="if(event.key==='Enter')applyCoupon()">
+              <button class="btn-coupon" onclick="applyCoupon()">Áp dụng</button>
+            </div>
+            <div class="coupon-ok" id="couponOk"></div>
+            <div class="coupon-err" id="couponErr2"></div>
+          </div>
+          <button style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:0;margin-bottom:10px;font-family:'DM Sans',sans-serif" onclick="document.getElementById('couponArea').style.display=document.getElementById('couponArea').style.display==='none'?'block':'none'">🏷 Tôi có mã giảm giá</button>
+          <!-- CHÍNH SÁCH HỦY PHÒNG -->
+          <button style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:0;margin-bottom:6px;font-family:'DM Sans',sans-serif" type="button" onclick="togglePolicy()">📋 Xem chính sách hủy phòng</button>
+          <div id="policyBox" style="background:rgba(255,200,50,0.08);border:1px solid rgba(255,200,50,0.25);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:none;font-size:12px;line-height:1.8;color:rgba(255,255,255,0.65)">
+            🟢 Hủy trước <strong>3+ ngày</strong>: hoàn 100% &nbsp;·&nbsp;
+            🟡 Hủy <strong>1–2 ngày</strong>: hoàn 50% &nbsp;·&nbsp;
+            🔴 Hủy ngay ngày nhận: không hoàn &nbsp;·&nbsp;
+            🔄 Đổi lịch trước 24h: miễn phí &nbsp;·&nbsp;
+            📞 0352 055 348
+          </div>
+          <!-- ĐẶT PHÒNG ĐỊNH KỲ -->
+          <button style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:12px;cursor:pointer;padding:0;margin-bottom:8px;font-family:'DM Sans',sans-serif" type="button" onclick="toggleRecurring()">🔁 Đặt phòng định kỳ</button>
+          <div id="recurringBox" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;margin-bottom:12px;display:none">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <div style="flex:1;min-width:120px">
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px">Lặp lại</div>
+                <select id="recurFreq" onchange="previewRecurring()" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:white;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif">
+                  <option value="weekly">Mỗi tuần</option>
+                  <option value="biweekly">2 tuần/lần</option>
+                  <option value="monthly">Mỗi tháng</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:100px">
+                <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px">Số lần lặp</div>
+                <select id="recurCount" onchange="previewRecurring()" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:white;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif">
+                  <option value="2">2 lần</option><option value="3">3 lần</option>
+                  <option value="4">4 lần</option><option value="6">6 lần</option>
+                </select>
+              </div>
+            </div>
+            <div id="recurPreview" style="margin-top:10px;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.8">← Chọn ngày nhận phòng trước</div>
+          </div>
+          <button class="btn-submit" onclick="handleBooking()" data-vi="Xác nhận đặt phòng" data-en="Confirm Booking">Xác nhận đặt phòng</button>
+          <div class="success-msg" id="gSuccess">✓ Đặt phòng thành công! Chúng tôi sẽ liên hệ xác nhận sớm nhất.</div>
+          <div class="error-msg" id="gError"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="services-section" id="services">
+    <div class="sec-title">Dịch vụ thêm</div>
+    <div class="sec-sub">Đặt trước dịch vụ để có trải nghiệm thoải mái nhất</div>
+
+    <div class="services-grid">
+      <div class="service-card" id="svc-clean" onclick="toggleService('clean')">
+        <div class="service-icon">🧹</div>
+        <div class="service-name">Dọn phòng thêm</div>
+        <div class="service-price">50.000đ / lần</div>
+        <div class="service-desc">Dọn dẹp, thay ga gối, vệ sinh phòng tắm theo yêu cầu</div>
+      </div>
+      <div class="service-card" id="svc-pickup" onclick="toggleService('pickup')">
+        <div class="service-icon">🚗</div>
+        <div class="service-name">Đón khách</div>
+        <div class="service-price">80.000đ / lượt</div>
+        <div class="service-desc">Đón tại bến xe, ga tàu hoặc điểm chỉ định trong khu vực</div>
+      </div>
+      <div class="service-card" id="svc-breakfast" onclick="toggleService('breakfast')">
+        <div class="service-icon">🍳</div>
+        <div class="service-name">Bữa sáng</div>
+        <div class="service-price">40.000đ / người</div>
+        <div class="service-desc">Bữa sáng đơn giản gồm xôi, bánh mì hoặc cháo</div>
+      </div>
+      <div class="service-card" id="svc-laundry" onclick="toggleService('laundry')">
+        <div class="service-icon">👕</div>
+        <div class="service-name">Giặt ủi</div>
+        <div class="service-price">30.000đ / kg</div>
+        <div class="service-desc">Giặt sấy và ủi quần áo, trả trong vòng 4–6 tiếng</div>
+      </div>
+      <div class="service-card" id="svc-bike" onclick="toggleService('bike')">
+        <div class="service-icon">🛵</div>
+        <div class="service-name">Thuê xe máy</div>
+        <div class="service-price">120.000đ / ngày</div>
+        <div class="service-desc">Xe số hoặc xe tay ga, có mũ bảo hiểm và bản đồ khu vực</div>
+      </div>
+      <div class="service-card" id="svc-tour" onclick="toggleService('tour')">
+        <div class="service-icon">🗺️</div>
+        <div class="service-name">Hướng dẫn tham quan</div>
+        <div class="service-price">150.000đ / buổi</div>
+        <div class="service-desc">Dẫn tham quan Lăng Cô, Bạch Mã, chợ địa phương</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:16px;color:white;margin-bottom:14px">Dịch vụ đã chọn</div>
+        <div class="selected-services-list" id="selectedServicesList">
+          <div style="font-size:13px;color:rgba(255,255,255,0.3);padding:16px 0">Chưa chọn dịch vụ nào — nhấn vào thẻ phía trên để thêm</div>
+        </div>
+        <div class="svc-total-row" id="svcTotalRow" style="display:none">
+          <span class="svc-total-label">Tổng tiền dịch vụ</span>
+          <span class="svc-total-val" id="svcTotalVal"></span>
+        </div>
+      </div>
+
+      <div class="service-form-box">
+        <h3>Thông tin đặt dịch vụ</h3>
+        <p>Điền thông tin để chúng tôi chuẩn bị trước</p>
+        <div class="form-row">
+          <div class="form-group"><label>Họ tên</label><input type="text" id="svcName" placeholder="Nguyễn Văn A"></div>
+          <div class="form-group"><label>Phòng đang ở</label>
+            <select id="svcRoom"><option>Phòng đơn</option><option>Phòng đôi</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Ngày cần dịch vụ</label><input type="date" id="svcDate"></div>
+          <div class="form-group"><label>Giờ cần dịch vụ</label><input type="time" id="svcTime" value="08:00"></div>
+        </div>
+        <div class="form-group"><label>Ghi chú thêm</label>
+          <textarea id="svcNote" rows="2" placeholder="Ví dụ: đón tại bến xe Phú Lộc lúc 14h..."></textarea>
+        </div>
+        <button class="btn-svc-submit" onclick="handleServiceBooking()">Đặt dịch vụ</button>
+        <div class="svc-success" id="svcSuccess"></div>
+        <div class="svc-error" id="svcError"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="reviews-section" id="reviews">
+    <div class="sec-title">Đánh giá của khách</div>
+    <div class="sec-sub">Cảm nhận thực tế từ những vị khách đã lưu trú</div>
+
+    <!-- TỔNG QUAN -->
+    <div class="review-summary" id="reviewSummary">
+      <div class="rs-score">
+        <div class="rs-number" id="rsNumber">—</div>
+        <div class="rs-stars" id="rsStars"></div>
+        <div class="rs-count" id="rsCount">Chưa có đánh giá</div>
+      </div>
+      <div class="rs-bars" id="rsBars"></div>
+    </div>
+
+    <!-- DANH SÁCH ĐÁNH GIÁ -->
+    <div class="reviews-grid" id="reviewsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:14px">Chưa có đánh giá nào. Hãy là người đầu tiên!</div>
+    </div>
+
+    <!-- FORM GỬI ĐÁNH GIÁ -->
+    <div class="review-form-box">
+      <h3>Gửi đánh giá của bạn</h3>
+      <p>Chia sẻ trải nghiệm để giúp những vị khách tiếp theo</p>
+
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Chọn số sao</div>
+        <div class="star-picker" id="starPicker">
+          <span onclick="setStar(1)">★</span>
+          <span onclick="setStar(2)">★</span>
+          <span onclick="setStar(3)">★</span>
+          <span onclick="setStar(4)">★</span>
+          <span onclick="setStar(5)">★</span>
+        </div>
+      </div>
+
+      <div class="rv-row">
+        <div class="rv-group"><label>Họ tên</label><input type="text" id="rvName" placeholder="Nguyễn Văn A"></div>
+        <div class="rv-group"><label>Loại phòng đã ở</label>
+          <select id="rvRoom"><option>Phòng đơn</option><option>Phòng đôi</option></select>
+        </div>
+      </div>
+      <div class="rv-group"><label>Nhận xét</label><textarea id="rvText" rows="3" placeholder="Chia sẻ cảm nhận của bạn..."></textarea></div>
+      <button class="btn-review" onclick="submitReview()">Gửi đánh giá</button>
+      <div class="review-ok" id="reviewOk">✓ Cảm ơn bạn đã đánh giá!</div>
+    </div>
+  </section>
+
+  <!-- BẢN ĐỒ -->
+  <section class="maps-section">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.5!2d107.7374876!3d16.3250625!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3141a110b65827%3A0x6dbb360de76ca87d!2zTmjDoCBuZ2hpIEjDuW5nIFPGoW4!5e0!3m2!1svi!2svn!4v1714000000000!5m2!1svi!2svn" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+  
+  <!-- FAQ -->
+  <section id="faq" style="padding:48px 40px;background:white">
+    <div class="sec-title" style="text-align:center">Câu hỏi thường gặp</div>
+    <div class="sec-sub" style="text-align:center">Giải đáp nhanh những thắc mắc phổ biến nhất</div>
+    <div id="faqList" style="max-width:720px;margin:24px auto 0"></div>
+  </section>
+
+  <div class="maps-overlay">
+      <div class="maps-info">
+        <div class="maps-detail">
+          <strong data-vi="📍 Địa chỉ" data-en="📍 Address">📍 Địa chỉ</strong>
+          <span data-vi="Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế" data-en="Vinh Son Village, Hung Loc Commune, Phu Loc District, Thua Thien Hue">Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</span>
+        </div>
+        <div class="maps-detail">
+          <strong data-vi="📞 Liên hệ" data-en="📞 Contact">📞 Liên hệ</strong>
+          0352 055 348 · 0968 492 764
+        </div>
+        <div class="maps-detail">
+          <strong data-vi="🕐 Giờ làm việc" data-en="🕐 Check-in/out">🕐 Giờ làm việc</strong>
+          <span data-vi="Nhận phòng 14:00 — Trả phòng 12:00" data-en="Check-in 14:00 — Check-out 12:00">Nhận phòng 14:00 — Trả phòng 12:00</span>
+        </div>
+      </div>
+      <a href="https://www.google.com/maps/place/Nhà+nghỉ+Hùng+Sơn/@16.3250625,107.7374876,17z" target="_blank" class="btn-directions" data-vi="🗺 Chỉ đường" data-en="🗺 Get Directions">🗺 Chỉ đường</a>
+    </div>
+  </section>
+
+  <!-- THANH TOÁN -->
+  <section class="payment-section">
+    <div class="payment-title" data-vi="Phương thức thanh toán" data-en="Payment Methods">Phương thức thanh toán</div>
+    <div class="payment-sub" data-vi="Chúng tôi hỗ trợ nhiều hình thức thanh toán linh hoạt" data-en="We support flexible payment methods">Chúng tôi hỗ trợ nhiều hình thức thanh toán linh hoạt</div>
+    <div class="payment-grid">
+      <div class="payment-card">
+        <div class="payment-icon">💵</div>
+        <div class="payment-name" data-vi="Tiền mặt" data-en="Cash">Tiền mặt</div>
+        <div class="payment-desc" data-vi="Thanh toán trực tiếp tại nhà nghỉ khi nhận phòng hoặc trả phòng" data-en="Pay directly at the guesthouse upon check-in or check-out">Thanh toán trực tiếp tại nhà nghỉ khi nhận phòng hoặc trả phòng</div>
+        <div class="payment-info-box">✅ <span data-vi="Không phụ phí" data-en="No extra charge">Không phụ phí</span></div>
+      </div>
+      <div class="payment-card">
+        <div class="payment-icon">🏦</div>
+        <div class="payment-name" data-vi="Chuyển khoản ngân hàng" data-en="Bank Transfer">Chuyển khoản ngân hàng</div>
+        <div class="payment-desc" data-vi="Chuyển khoản trước để giữ phòng, gửi ảnh xác nhận qua Zalo" data-en="Transfer in advance to secure your room, send confirmation via Zalo">Chuyển khoản trước để giữ phòng, gửi ảnh xác nhận qua Zalo</div>
+        <div class="payment-info-box">
+          🏦 TPBank<br>
+          STK: <strong>15398518888</strong><br>
+          CTK: <strong>LÊ ĐỨC HÙNG SƠN</strong>
+        </div>
+      </div>
+      <div class="payment-card">
+        <div class="payment-icon">📱</div>
+        <div class="payment-name">Momo / ZaloPay</div>
+        <div class="payment-desc" data-vi="Quét mã QR hoặc chuyển tiền qua số điện thoại" data-en="Scan QR code or transfer via phone number">Quét mã QR hoặc chuyển tiền qua số điện thoại</div>
+        <div class="payment-info-box">
+          📱 <span data-vi="Số điện thoại" data-en="Phone">Số điện thoại</span>: <strong>0968 492 764</strong><br>
+          <span data-vi="Tên" data-en="Name">Tên</span>: <strong>Lê Đức Hùng Sơn</strong>
+        </div>
+        <a href="https://me.momo.vn/hungson" target="_blank" class="btn-pay momo">Momo</a>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:14px 18px;background:#fff8e8;border:1px solid #f0d060;border-radius:10px;font-size:13px;color:#7a6020">
+      ⚠️ <span data-vi="Lưu ý: Sau khi chuyển khoản, vui lòng nhắn tin Zalo kèm mã đặt phòng để chúng tôi xác nhận." data-en="Note: After transferring, please send your booking code via Zalo for confirmation.">Lưu ý: Sau khi chuyển khoản, vui lòng nhắn tin Zalo kèm mã đặt phòng để chúng tôi xác nhận.</span>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-brand">Nhà Nghỉ Hùng Sơn</div>
+    <div class="footer-info">
+      <span data-vi="Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế" data-en="Vinh Son Village, Hung Loc, Phu Loc, Hue">Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</span><br>
+      📞 0352 055 348 · 0968 492 764
+    </div>
+  <div style="text-align:center;padding:12px;font-size:12px;color:rgba(255,255,255,0.3);border-top:1px solid rgba(255,255,255,0.08)"><button onclick="openPrivacy()" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;text-decoration:underline">Chính sách bảo mật</button> · © 2025 Nhà Nghỉ Hùng Sơn</div>
+</footer>
+
+  <!-- ZALO FLOAT BUTTON -->
+  <div class="zalo-float">
+    <div class="zalo-tooltip" data-vi="Chat Zalo với chúng tôi!" data-en="Chat with us on Zalo!">Chat Zalo với chúng tôi!</div>
+    <a class="zalo-btn" href="https://zalo.me/0968492764" target="_blank" aria-label="Zalo">
+      <div class="zalo-pulse"></div>
+      <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="24" fill="#0068FF"/>
+        <text x="24" y="31" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="16" fill="white">Zalo</text>
+      </svg>
+    </a>
+  </div>
+
+  <!-- MODAL MÃ ĐẶT PHÒNG -->
+  <div class="code-modal-overlay" id="codeModalOverlay" onclick="closeCodeModal()">
+    <div class="code-modal" onclick="event.stopPropagation()">
+      <div class="code-modal-icon">🎉</div>
+      <h3>Đặt phòng thành công!</h3>
+      <p>Lưu lại mã bên dưới để tra cứu thông tin, xem đơn dịch vụ hoặc hủy phòng khi cần</p>
+      <div class="code-box">
+        <div class="code-label">Mã đặt phòng của bạn</div>
+        <div class="code-number" id="modalCode">HS000000</div>
+        <div class="code-copy-hint">Nhấn sao chép để lưu lại</div>
+      </div>
+      <button class="btn-copy-code" onclick="copyCode()">📋 Sao chép mã</button>
+      <button class="btn-close-modal" onclick="closeCodeModal()">Đã hiểu, đóng lại</button>
+      <div id="copyDone" style="font-size:12px;color:var(--green);margin-top:10px;display:none">✓ Đã sao chép!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TRANG ADMIN ===== -->
+<!-- ===== TRANG KHÁCH HÀNG ===== -->
+<!-- ===== TRANG TRA CỨU KHÁCH HÀNG ===== -->
+<div id="customerPage" class="page customer-page">
+  <div class="customer-header">
+    <div class="logo">Nhà Nghỉ Hùng Sơn</div>
+    <button class="back-btn" onclick="showPage('guestPage')">← Về trang chủ</button>
+  </div>
+
+  <div class="lookup-hero">
+    <h2>Tra cứu đặt phòng</h2>
+    <p>Nhập mã đặt phòng để xem thông tin và lịch sử của bạn</p>
+    <!-- Tab chọn kiểu tra cứu -->
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:20px">
+      <button id="tabCode" onclick="switchLookupTab('code')" style="background:rgba(201,168,76,0.25);border:1px solid var(--gold);color:var(--gold);padding:8px 20px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">🔑 Mã đặt phòng</button>
+      <button id="tabPhone" onclick="switchLookupTab('phone')" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:8px 20px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">📱 Số điện thoại</button>
+    </div>
+    <div id="panelCode" style="max-width:400px;margin:0 auto;display:flex;gap:10px;align-items:center">
+      <div style="display:flex;align-items:center;flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;overflow:hidden">
+        <span style="padding:12px 14px;color:var(--gold);font-weight:700;font-size:16px;border-right:1px solid rgba(255,255,255,0.15)">HS</span>
+        <input id="lookupCode" type="tel" inputmode="numeric" pattern="[0-9]*"
+          placeholder="123456"
+          style="flex:1;background:transparent;border:none;color:white;padding:12px 14px;font-size:16px;outline:none;font-family:'DM Sans',sans-serif;letter-spacing:2px;width:100%"
+          onkeydown="if(event.key==='Enter')doLookup()">
+      </div>
+      <button class="btn-lookup" onclick="doLookup()">Tra cứu</button>
+    </div>
+    <!-- Panel SĐT -->
+    <div id="panelPhone" style="max-width:400px;margin:0 auto;display:none;flex-direction:column;gap:10px">
+      <input id="lookupPhone" type="tel" placeholder="Nhập số điện thoại đã đặt phòng"
+        style="width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:white;padding:12px 16px;font-size:15px;outline:none;font-family:'DM Sans',sans-serif"
+        onkeydown="if(event.key==='Enter')doLookupPhone()">
+      <button class="btn-lookup" onclick="doLookupPhone()">Tra cứu</button>
+    </div>
+    <div id="lookupErr" style="color:#f87171;font-size:13px;margin-top:12px;display:none"></div>
+  </div>
+
+  <div class="customer-body" id="customerBody">
+    <div class="customer-empty">
+      <div class="big-icon">🔍</div>
+      <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">Nhập mã để tra cứu</div>
+      <div style="font-size:13px;color:var(--muted)">Mã đặt phòng dạng <strong>HS123456</strong> — hiển thị sau khi đặt phòng thành công</div>
+    </div>
+  </div>
+</div>
+
+<div id="adminPage" class="page admin-page">
+  <div class="admin-header">
+    <div style="display:flex;align-items:center">
+      <div class="logo">Nhà Nghỉ Hùng Sơn</div>
+      <span class="admin-tag">Quản lý</span>
+    </div>
+    <button class="back-btn" onclick="showPage('guestPage')">← Về trang chủ</button>
+  </div>
+
+  <div class="admin-login" id="adminLogin">
+    <h2>Đăng nhập</h2>
+    <p>Dành cho chủ nhà nghỉ</p>
+    <div class="al-group"><label>Tên đăng nhập</label><input type="text" id="loginUser" placeholder="admin"></div>
+    <div class="al-group"><label>Mật khẩu</label><input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-err" id="loginErr">Sai tên đăng nhập hoặc mật khẩu</div>
+  </div>
+
+  <div class="admin-body" id="adminBody">
+    <!-- DASHBOARD -->
+    <div class="dashboard-tabs">
+      <button class="dash-tab active" onclick="switchDash('month',this)">📅 Theo tháng</button>
+      <button class="dash-tab" onclick="switchDash('day',this)">📆 Theo ngày (30 ngày)</button>
+      <button class="dash-tab" onclick="switchDash('room',this)">🏠 Theo phòng</button>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="chart-wrap">
+      <div class="chart-title" id="chartTitle">Doanh thu theo tháng</div>
+      <div class="bar-chart" id="barChart"></div>
+      <div class="summary-row" id="summaryRow"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header"><h3>Quản lý ngày khuyến mãi</h3></div>
+      <div class="promo-admin-form">
+        <div class="promo-form-group">
+          <label>Từ ngày</label>
+          <input type="date" id="promoFrom">
+        </div>
+        <div class="promo-form-group">
+          <label>Đến ngày</label>
+          <input type="date" id="promoTo">
+        </div>
+        <div class="promo-form-group">
+          <label>Áp dụng cho</label>
+          <select id="promoApply">
+            <option value="Tất cả phòng">Tất cả phòng</option>
+            <option value="Phòng đơn">Phòng đơn</option>
+            <option value="Phòng đôi">Phòng đôi</option>
+          </select>
+        </div>
+        <div class="promo-form-group">
+          <label>Giảm giá (%)</label>
+          <input type="number" id="promoPercent" min="1" max="99" placeholder="VD: 20">
+        </div>
+        <div class="promo-form-group">
+          <label>Nội dung hiển thị</label>
+          <input type="text" id="promoLabel2" placeholder="VD: Cuối tuần vui vẻ">
+        </div>
+        <button class="btn-add-promo" onclick="addPromo()">+ Thêm</button>
+      </div>
+      <div class="promo-list" id="promoList"><div class="empty-state" style="padding:20px 0">Chưa có chương trình khuyến mãi nào</div></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header"><h3>🏷 Quản lý mã giảm giá (Coupon)</h3></div>
+      <div style="padding:16px">
+        <div class="coupon-admin-grid">
+          <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Mã code</label>
+            <input class="coupon-admin-input" id="cpCode" placeholder="VD: WELCOME10" style="text-transform:uppercase"></div>
+          <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Giảm (%)</label>
+            <input class="coupon-admin-input" id="cpPercent" type="number" min="1" max="99" placeholder="VD: 10"></div>
+          <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Số lần dùng</label>
+            <input class="coupon-admin-input" id="cpLimit" type="number" min="1" placeholder="VD: 50"></div>
+          <div><label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px">Hết hạn</label>
+            <input class="coupon-admin-input" id="cpExpiry" type="date"></div>
+        </div>
+        <button class="btn-add-promo" onclick="addCoupon()">+ Tạo mã</button>
+        <div id="couponList" style="margin-top:14px"><div class="empty-state" style="padding:16px 0">Chưa có mã giảm giá nào</div></div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h3>📊 Lịch phòng (Gantt)</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="ganttPrev()" style="background:#f5f5f5;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px">‹</button>
+          <span id="ganttLabel" style="font-size:13px;font-weight:500;color:var(--dark);min-width:130px;text-align:center"></span>
+          <button onclick="ganttNext()" style="background:#f5f5f5;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px">›</button>
+          <button onclick="ganttToday()" style="background:var(--dark);color:white;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px">Hôm nay</button>
+        </div>
+      </div>
+      <div style="padding:16px">
+        <div class="gantt-wrap"><div id="ganttBody"></div></div>
+        <div class="gantt-legend">
+          <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#f59e0b"></div>Chờ xác nhận</div>
+          <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#2d6a4f"></div>Đã xác nhận</div>
+          <div class="gantt-legend-item"><div class="gantt-legend-dot" style="background:#9ca3af"></div>Đã hủy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header"><h3>Danh sách đặt phòng</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <input type="month" id="exportMonth" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif">
+          <button onclick="exportExcel()" style="background:#1a7a3a;color:white;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">📥 Xuất Excel</button>
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" onchange="renderAdmin()" id="filterRoom">
+            <option value="">Tất cả phòng</option>
+            <option>Phòng đơn</option>
+            <option>Phòng đôi</option>
+          </select>
+          <select class="filter-select" onchange="renderAdmin()" id="filterStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="new">Mới</option>
+            <option value="done">Đã xác nhận</option>
+            <option value="cancel">Đã hủy</option>
+          </select>
+        </div>
+      </div>
+      <div id="adminTable"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header"><h3>Đánh giá của khách</h3></div>
+      <div style="padding:16px" id="adminReviews"><div class="empty-state">Chưa có đánh giá nào</div></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-header"><h3>Đơn đặt dịch vụ</h3></div>
+      <div style="padding:16px" id="adminServices"><div class="empty-state">Chưa có đơn dịch vụ nào</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+
+  <!-- PRINT AREA - HÓA ĐƠN -->
+  <div id="printArea">
+    <div class="invoice-header">
+      <div>
+        <div class="invoice-logo">Nhà Nghỉ Hùng Sơn</div>
+        <div class="invoice-sub">📍 Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</div>
+        <div class="invoice-sub">📞 0352 055 348</div>
+      </div>
+      <div>
+        <div class="invoice-title">HÓA ĐƠN</div>
+        <div class="invoice-meta" id="invoiceCode"></div>
+        <div class="invoice-meta" id="invoiceDate"></div>
+      </div>
+    </div>
+    <table class="invoice-table">
+      <thead><tr><th>Thông tin</th><th>Chi tiết</th></tr></thead>
+      <tbody id="invoiceBody"></tbody>
+    </table>
+    <div class="invoice-total-row">
+      <div class="invoice-total-box">
+        <div class="invoice-total-line" id="invoiceSubtotal"></div>
+        <div class="invoice-total-line" id="invoiceDiscount" style="color:#2d6a4f"></div>
+        <div class="invoice-grand" id="invoiceGrand"></div>
+      </div>
+    </div>
+    <div class="invoice-footer">
+      Cảm ơn quý khách đã lựa chọn Nhà Nghỉ Hùng Sơn! · Nhận phòng 14:00 — Trả phòng trước 12:00
+    </div>
+  </div>
+
+
+  <div id="printArea" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1a1a1a">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:#1a1a1a;font-weight:700">Nhà Nghỉ Hùng Sơn</div>
+        <div style="font-size:12px;color:#555;margin-top:4px">📍 Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</div>
+        <div style="font-size:12px;color:#555">📞 0352 055 348</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:28px;font-weight:700;color:#1a1a1a">HÓA ĐƠN</div>
+        <div style="font-size:12px;color:#555" id="invoiceCode"></div>
+        <div style="font-size:12px;color:#555" id="invoiceDate"></div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:20px 0">
+      <thead><tr><th style="background:#1a1a1a;color:white;padding:10px 14px;text-align:left;font-size:13px">Thông tin</th><th style="background:#1a1a1a;color:white;padding:10px 14px;text-align:left;font-size:13px">Chi tiết</th></tr></thead>
+      <tbody id="invoiceBody"></tbody>
+    </table>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <div style="background:#f9f9f9;border:1px solid #eee;border-radius:8px;padding:16px 24px;min-width:240px">
+        <div id="invoiceSubtotal" style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"></div>
+        <div id="invoiceDiscount" style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:#2d6a4f"></div>
+        <div id="invoiceGrand" style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;border-top:2px solid #1a1a1a;padding-top:10px;margin-top:6px"></div>
+      </div>
+    </div>
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#888;text-align:center">Cảm ơn quý khách đã lựa chọn Nhà Nghỉ Hùng Sơn! · Nhận phòng 14:00 — Trả phòng trước 12:00</div>
+  </div>
+  <link rel="stylesheet" href="css/style.css">
+
+
+  <!-- PRIVACY POLICY MODAL -->
+  <div class="privacy-modal" id="privacyModal" onclick="if(event.target===this)closePrivacy()">
+    <div class="privacy-box">
+      <button class="privacy-close" onclick="closePrivacy()">✕ Đóng</button>
+      <div class="privacy-h1">Chính sách Bảo mật</div>
+      <div class="privacy-p">Cập nhật lần cuối: tháng 5/2025 — Nhà Nghỉ Hùng Sơn</div>
+      <div class="privacy-h2">1. Thông tin chúng tôi thu thập</div>
+      <div class="privacy-p">Họ tên, số điện thoại, email khi bạn đặt phòng hoặc gửi đánh giá. Thông tin chỉ dùng để xác nhận và liên lạc về đặt phòng của bạn.</div>
+      <div class="privacy-h2">2. Cách chúng tôi sử dụng thông tin</div>
+      <div class="privacy-p">• Xác nhận và quản lý đặt phòng<br>• Gửi email/tin nhắn xác nhận<br>• Hỗ trợ giải quyết vấn đề phát sinh<br>• Cải thiện dịch vụ</div>
+      <div class="privacy-h2">3. Bảo mật dữ liệu</div>
+      <div class="privacy-p">Thông tin của bạn được lưu trữ an toàn. Chúng tôi không bán, trao đổi hoặc chia sẻ thông tin cá nhân với bên thứ ba vì mục đích thương mại.</div>
+      <div class="privacy-h2">4. Quyền của bạn</div>
+      <div class="privacy-p">Bạn có quyền yêu cầu xem, chỉnh sửa hoặc xóa thông tin cá nhân. Liên hệ: <strong>0352 055 348</strong></div>
+      <div class="privacy-h2">5. Cookie</div>
+      <div class="privacy-p">Website sử dụng localStorage (không phải cookie) để lưu trạng thái ứng dụng trên thiết bị của bạn. Không có dữ liệu nào gửi lên máy chủ quảng cáo.</div>
+      <div class="privacy-h2">6. Liên hệ</div>
+      <div class="privacy-p">📞 0352 055 348 &nbsp;|&nbsp; 📍 Thôn Vinh Sơn, Xã Hưng Lộc, Huyện Phú Lộc, Thừa Thiên Huế</div>
+    </div>
+  </div>
+
+<!-- GALLERY MODAL -->
+  <div class="gallery-overlay" id="galleryOverlay" onclick="if(event.target===this)closeGallery()">
+    <button class="gallery-close" onclick="closeGallery()">✕</button>
+    <div class="gallery-title" id="galleryTitle">Phòng Đơn</div>
+
+</body>
+</html>
