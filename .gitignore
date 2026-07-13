@@ -1,7 +1,7 @@
 node_modules
+backend/node_modules
+python/venv
 .env
 backend/.env
 python/.env
-python/venv/
 .DS_Store
- 
