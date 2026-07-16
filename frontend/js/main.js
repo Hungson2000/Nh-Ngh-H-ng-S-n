@@ -24,7 +24,7 @@
   // frontend KHÔNG BAO GIỜ được gọi thẳng Gemini hay chứa API key ở đây.
   // Điền URL backend đã deploy, ví dụ: 'https://duan-nhanghi-backend.onrender.com'
   // ================================================================
-  const AI_API_BASE = ''; // ← TODO: điền URL backend Render của bạn vào đây
+ const AI_API_BASE = 'https://nh-ngh-h-ng-s-n.onrender.com';// ← TODO: điền URL backend Render của bạn vào đây
  
   try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) {}
  
