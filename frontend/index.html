@@ -738,5 +738,69 @@
     <button class="gallery-close" onclick="closeGallery()">✕</button>
     <div class="gallery-title" id="galleryTitle">Phòng Đơn</div>
 
+    <div class="gallery-main" id="galleryMain"></div>
+    <div class="gallery-thumbs" id="galleryThumbs"></div>
+
+    <div class="gallery-nav">
+      <button onclick="galleryPrev()">← Trước</button>
+      <button onclick="galleryNext()">Sau →</button>
+    </div>
+  </div>
+<!-- ===== TƯ VẤN PHÒNG AI ===== -->
+  <button class="ai-fab" id="aiFab" onclick="openAIPanel()" title="Tư vấn phòng bằng AI">
+    🤖
+  </button>
+
+  <div class="ai-panel-overlay" id="aiPanelOverlay" onclick="if(event.target===this)closeAIPanel()">
+    <div class="ai-panel">
+      <div class="ai-panel-header">
+        <span>🤖 Trợ lý tư vấn phòng</span>
+        <button class="ai-panel-close" onclick="closeAIPanel()">✕</button>
+      </div>
+
+      <div class="ai-panel-tabs">
+        <button class="ai-tab active" id="aiTabBtnSuggest" onclick="switchAITab('suggest')">Gợi ý nhanh</button>
+        <button class="ai-tab" id="aiTabBtnChat" onclick="switchAITab('chat')">Trò chuyện</button>
+      </div>
+
+      <!-- TAB: FORM GỢI Ý NHANH -->
+      <div class="ai-tab-panel" id="aiTabSuggest">
+        <div class="ai-form-row">
+          <label>Số lượng khách</label>
+          <input type="number" id="aiGuests" min="1" max="10" placeholder="VD: 2">
+        </div>
+        <div class="ai-form-row">
+          <label>Ngân sách mỗi đêm (không bắt buộc)</label>
+          <input type="text" id="aiBudget" placeholder="VD: khoảng 250.000đ">
+        </div>
+        <div class="ai-form-row">
+          <label>Ngày nhận phòng</label>
+          <input type="date" id="aiCheckin">
+        </div>
+        <div class="ai-form-row">
+          <label>Ngày trả phòng</label>
+          <input type="date" id="aiCheckout">
+        </div>
+        <div class="ai-form-row">
+          <label>Nhu cầu thêm (không bắt buộc)</label>
+          <textarea id="aiNeeds" rows="2" placeholder="VD: cần yên tĩnh, đi cùng trẻ nhỏ..."></textarea>
+        </div>
+        <button class="ai-submit-btn" id="aiSuggestBtn" onclick="submitAISuggest()">✨ Nhờ AI tư vấn</button>
+        <div class="ai-suggest-result" id="aiSuggestResult"></div>
+      </div>
+
+      <!-- TAB: CHAT TỰ DO -->
+      <div class="ai-tab-panel" id="aiTabChat" style="display:none">
+        <div class="ai-chat-messages" id="aiChatMessages">
+          <div class="ai-msg ai-msg-bot">Chào bạn! Mình có thể giúp gì cho bạn về việc chọn phòng ở Nhà Nghỉ Hùng Sơn? 😊</div>
+        </div>
+        <div class="ai-chat-input-row">
+          <input type="text" id="aiChatInput" placeholder="Nhập câu hỏi của bạn..." onkeydown="if(event.key==='Enter')sendAIChatMessage()">
+          <button onclick="sendAIChatMessage()">Gửi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

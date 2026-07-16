@@ -1,3 +1,4 @@
+
 // ================================================================
   // ⚙️ CẤU HÌNH EMAILJS — https://dashboard.emailjs.com
   // 1. Tạo tài khoản miễn phí tại emailjs.com
@@ -5,11 +6,11 @@
   // 3. Tạo 2 Email Template → copy Template ID
   // 4. Account → API Keys → copy Public Key
   // ================================================================
-  const EMAILJS_PUBLIC_KEY    = 'pUy-ayRECajyRNy2k';   // ← Public Key của bạn
-  const EMAILJS_SERVICE_ID    = 'service_12345';         // ← Thay bằng Service ID thật
-  const EMAILJS_TEMPLATE_OWNER = 'template_alfhcb7';    // ← Template gửi cho chủ nhà
-  const EMAILJS_TEMPLATE_GUEST = 'template_d2ozdyn';    // ← Template gửi cho khách
-
+  const EMAILJS_PUBLIC_KEY    = 'pUy-ayRECajyRNy2k';   // Public Key của bạn
+  const EMAILJS_SERVICE_ID    = 'service_12345';         // Service ID thật (Gmail đã kết nối)
+  const EMAILJS_TEMPLATE_OWNER = 'template_d2ozdyn';    // Template gửi cho chủ nhà (To: sonhung...@gmail.com)
+  const EMAILJS_TEMPLATE_GUEST = 'template_alfhcb7';    // Template gửi cho khách (To: {{guest_email}})
+ 
   // ================================================================
   // ⚙️ CẤU HÌNH TELEGRAM — Nhận thông báo tức thì khi có booking mới
   // 1. Nhắn @BotFather trên Telegram → /newbot → copy TOKEN
@@ -18,9 +19,15 @@
   // ================================================================
   const TELEGRAM_BOT_TOKEN = '';   // ← VD: '7234567890:AAF...'
   const TELEGRAM_CHAT_ID   = '';   // ← VD: '123456789'
-
+  // ================================================================
+  // ⚙️ CẤU HÌNH AI TƯ VẤN PHÒNG — backend Node (Render) giữ API key Gemini,
+  // frontend KHÔNG BAO GIỜ được gọi thẳng Gemini hay chứa API key ở đây.
+  // Điền URL backend đã deploy, ví dụ: 'https://duan-nhanghi-backend.onrender.com'
+  // ================================================================
+  const AI_API_BASE = ''; // ← TODO: điền URL backend Render của bạn vào đây
+ 
   try { emailjs.init(EMAILJS_PUBLIC_KEY); } catch(e) {}
-
+ 
   async function sendTelegram(booking) {
     if(!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     const msg = encodeURIComponent(
@@ -56,7 +63,7 @@
   };
   let _db = null;
   let _firebaseReady = false;
-
+ 
   async function initFirebase() {
     try {
       const { initializeApp, getDatabase, ref, set, get, onValue } = window._firebaseModules || {};
@@ -82,7 +89,7 @@
       _firebaseReady = false;
     }
   }
-
+ 
   function saveData() {
     // Luôn lưu localStorage trước (offline fallback)
     localStorage.setItem('hs_bookings',      JSON.stringify(bookings));
@@ -101,7 +108,7 @@
       }).catch(e=>console.warn('Firebase save error:', e));
     }
   }
-
+ 
   function loadData() {
     // Load từ localStorage trước (instant)
     bookings      = JSON.parse(localStorage.getItem('hs_bookings')      || '[]');
@@ -111,9 +118,9 @@
     // Firebase sẽ tự cập nhật qua onValue listener
     initFirebase();
   }
-
+ 
   function checkLocalStorage() {}
-
+ 
   let bookings = [];
   let reviews = [];
   let serviceOrders = [];
@@ -129,7 +136,7 @@
   };
   let selectedStar = 0;
   let calYear, calMonth;
-
+ 
   // ===== NGÔN NGỮ =====
   let currentLang = 'vi';
   function setLang(lang) {
@@ -149,7 +156,7 @@
       const el=document.getElementById(id); if(el) el.placeholder=val;
     });
   }
-
+ 
   // ===== SỐ PHÒNG CÒN LẠI =====
   const ROOM_TOTAL = {'Phòng đơn': 5, 'Phòng đôi': 3};
   function updateRoomAvailability() {
@@ -178,7 +185,7 @@
       }
     });
   }
-
+ 
   function init() {
     const now = new Date();
     calYear = now.getFullYear(); calMonth = now.getMonth();
@@ -193,11 +200,11 @@
     document.getElementById('gCheckout').min = today;
     document.getElementById('svcDate').min = today;
   }
-
+ 
   function closeCodeModal(){
     document.getElementById('codeModalOverlay').style.display='none';
   }
-
+ 
   function copyCode(){
     const code = document.getElementById('modalCode').textContent;
     navigator.clipboard.writeText(code).then(()=>{
@@ -211,7 +218,7 @@
       document.getElementById('copyDone').style.display='block';
     });
   }
-
+ 
   // ===== TRA CỨU KHÁCH HÀNG =====
 function switchLookupTab(tab) {
     const isCode = tab === 'code';
@@ -222,7 +229,7 @@ function switchLookupTab(tab) {
     document.getElementById('lookupErr').style.display = 'none';
     document.getElementById('customerBody').innerHTML = `<div class="customer-empty"><div class="big-icon">🔍</div><div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px">Nhập thông tin để tra cứu</div></div>`;
   }
-
+ 
   function doLookup(){
     const num = document.getElementById('lookupCode').value.trim();
     const code = 'HS' + num;
@@ -233,7 +240,7 @@ function switchLookupTab(tab) {
     if(!booking){errEl.textContent='Không tìm thấy mã "'+code+'". Vui lòng kiểm tra lại.';errEl.style.display='block';return}
     renderCustomerResult(booking);
   }
-
+ 
   function renderCustomerResult(booking){
     const body = document.getElementById('customerBody');
     const svcOrders = serviceOrders.filter(s=>s.name===booking.name);
@@ -242,7 +249,7 @@ function switchLookupTab(tab) {
     const tierName = points >= 200 ? '🥇 VIP' : points >= 50 ? '🥈 Thân thiết' : '🥉 Thành viên';
     const sLabel={new:'Chờ xác nhận',done:'Đã xác nhận',cancel:'Đã hủy'};
     const sCls={new:'status-new',done:'status-done',cancel:'status-cancel'};
-
+ 
     let svcHTML = '';
     if(svcOrders.length){
       svcHTML = `<div class="svc-detail-card">
@@ -259,7 +266,7 @@ function switchLookupTab(tab) {
         </div>
       </div>`;
     }
-
+ 
     body.innerHTML = `
       <div class="points-card">
         <div class="points-label">Điểm tích lũy</div>
@@ -268,7 +275,7 @@ function switchLookupTab(tab) {
         <div class="points-bar-track"><div class="points-bar-fill" style="width:${Math.min(100,Math.round(points/nextTier*100))}%"></div></div>
         <div class="points-next">Mỗi 10.000đ chi tiêu = 1 điểm</div>
       </div>
-
+ 
       <div class="booking-detail-card">
         <div class="bdc-header">
           <div>
@@ -301,9 +308,9 @@ function switchLookupTab(tab) {
           </div>
         </div>
       </div>
-
+ 
       ${svcHTML}
-
+ 
       <div style="text-align:center;margin-top:8px">
         <button onclick="document.getElementById('lookupCode').value='';document.getElementById('customerBody').innerHTML='<div class=customer-empty><div class=big-icon>🔍</div><div>Nhập mã để tra cứu</div></div>'"
           style="background:none;border:1px solid var(--border);color:var(--muted);padding:9px 20px;border-radius:8px;cursor:pointer;font-family:DM Sans,sans-serif;font-size:13px">
@@ -311,7 +318,7 @@ function switchLookupTab(tab) {
         </button>
       </div>`;
   }
-
+ 
   function cancelFromLookup(code){
     if(!confirm('Bạn có chắc muốn hủy đặt phòng '+code+'?')) return;
     const b=bookings.find(x=>x.code===code);
@@ -323,7 +330,7 @@ function switchLookupTab(tab) {
       if(document.getElementById('adminBody').style.display==='block'){renderAdmin();renderStats()}
     }
   }
-
+ 
   function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -341,19 +348,19 @@ function switchLookupTab(tab) {
       document.getElementById('loginErr').style.display='none';
     }
   }
-
+ 
   function goSection(id) {
     const el = document.getElementById(id);
     const top = el.getBoundingClientRect().top + window.scrollY - 70;
     window.scrollTo({top, behavior:'smooth'});
   }
-
+ 
   function selectRoom(room) {
     document.getElementById('gRoom').value = room;
     goSection('booking');
     calcPrice();
   }
-
+ 
   function getActivePromo(dateStr, room) {
     const d = new Date(dateStr);
     return promos.find(p => {
@@ -362,7 +369,7 @@ function switchLookupTab(tab) {
       return d >= from && d <= to && (p.apply === 'Tất cả phòng' || p.apply === room);
     });
   }
-
+ 
   function calcPrice() {
     const ci = document.getElementById('gCheckin').value;
     const co = document.getElementById('gCheckout').value;
@@ -391,7 +398,26 @@ function switchLookupTab(tab) {
     document.getElementById('couponArea').style.display='block';
     if(document.getElementById('recurringBox')&&document.getElementById('recurringBox').style.display!=='none')previewRecurring();
   }
-
+ 
+  // Tính số phòng còn trống (của 1 loại phòng) trong suốt khoảng [ci, co)
+  // Trả về số nhỏ nhất còn trống trong các đêm — nếu <=0 nghĩa là có ít nhất 1 đêm đã hết phòng
+  function getAvailableRoomsForRange(room, ci, co) {
+    const total = ROOM_TOTAL[room] || 0;
+    let minAvail = total;
+    let d = new Date(ci);
+    const end = new Date(co);
+    while (d < end) {
+      const ds = d.toISOString().split('T')[0];
+      const bookedCount = bookings.filter(b =>
+        b.room === room && b.status !== 'cancel' &&
+        b.checkin <= ds && b.checkout > ds
+      ).length;
+      minAvail = Math.min(minAvail, total - bookedCount);
+      d.setDate(d.getDate() + 1);
+    }
+    return minAvail;
+  }
+ 
   async function handleBooking() {
     const name = document.getElementById('gName').value.trim();
     const phone = document.getElementById('gPhone').value.trim();
@@ -407,6 +433,11 @@ function switchLookupTab(tab) {
     if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Email không hợp lệ.';errEl.style.display='block';return}
     const nights = Math.round((new Date(co)-new Date(ci))/86400000);
     if(nights<=0){errEl.textContent='Ngày trả phòng phải sau ngày nhận phòng.';errEl.style.display='block';return}
+    if(getAvailableRoomsForRange(room, ci, co) <= 0){
+      errEl.textContent = 'Rất tiếc, '+room+' đã hết trong khoảng ngày bạn chọn. Vui lòng chọn ngày khác hoặc loại phòng khác.';
+      errEl.style.display='block';
+      return;
+    }
     const promo = getActivePromo(ci, room);
     const discount = promo ? promo.percent : 0;
     const rate = Math.round(PRICES[room] * (1 - discount/100));
@@ -447,17 +478,13 @@ function switchLookupTab(tab) {
     document.getElementById('codeModalOverlay').style.display='flex';
     document.getElementById('copyDone').style.display='none';
     // Gửi email bất đồng bộ — không chặn, không báo lỗi cho khách nếu thất bại
-    if(EMAILJS_SERVICE_ID && EMAILJS_SERVICE_ID !== 'service_12345') {
-      const sends = [emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_OWNER, params)];
-      if(email) sends.push(emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_GUEST, params));
-      Promise.all(sends).catch(err => console.warn('EmailJS warning:', err));
-    } else {
-      console.warn('⚠️ EmailJS chưa cấu hình: Vào dashboard.emailjs.com lấy Service ID thật và thay vào EMAILJS_SERVICE_ID');
-    }
+   const sends = [emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_OWNER, params)];
+    if(email) sends.push(emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_GUEST, params));
+    Promise.all(sends).catch(err => console.warn('EmailJS warning:', err));
   }
-
+ 
   function changeMonth(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}renderCalendar()}
-
+ 
   function getBookedDates(){
     const dates=new Set();
     bookings.filter(b=>b.status!=='cancel').forEach(b=>{
@@ -466,7 +493,7 @@ function switchLookupTab(tab) {
     });
     return dates;
   }
-
+ 
   function renderCalendar(){
     const months=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
     document.getElementById('calMonth').textContent=months[calMonth]+' '+calYear;
@@ -487,7 +514,7 @@ function switchLookupTab(tab) {
     }
     grid.innerHTML=html;
   }
-
+ 
   async function doLogin(){
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
@@ -522,7 +549,7 @@ function switchLookupTab(tab) {
       errEl.style.display='block';
     }
   }
-
+ 
   // Kiểm tra session còn hợp lệ khi load trang
   function checkAdminSession() {
     const auth = sessionStorage.getItem('hs_auth');
@@ -537,9 +564,9 @@ function switchLookupTab(tab) {
       }
     } catch(e) { sessionStorage.removeItem('hs_auth'); }
   }
-
+ 
   let currentDash = 'month';
-
+ 
   function renderStats(){
     const total=bookings.length;
     const newB=bookings.filter(b=>b.status==='new').length;
@@ -553,21 +580,21 @@ function switchLookupTab(tab) {
     `;
     renderDashChart(currentDash);
   }
-
+ 
   function switchDash(type, btn) {
     currentDash = type;
     document.querySelectorAll('.dash-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     renderDashChart(type);
   }
-
+ 
   function renderDashChart(type) {
     const chart = document.getElementById('barChart');
     const summary = document.getElementById('summaryRow');
     const title = document.getElementById('chartTitle');
     const active = bookings.filter(b=>b.status!=='cancel');
     let labels=[], values=[], totalRev=0, totalNights=0, totalBook=0;
-
+ 
     if(type==='month') {
       title.textContent = 'Doanh thu 6 tháng gần nhất';
       const map={};
@@ -583,7 +610,7 @@ function switchLookupTab(tab) {
         if(map[key]){map[key].rev+=b.total;map[key].nights+=b.nights;map[key].count++;}
       });
       Object.values(map).forEach(m=>{labels.push(m.label);values.push(m.rev);totalRev+=m.rev;totalNights+=m.nights;totalBook+=m.count;});
-
+ 
     } else if(type==='day') {
       title.textContent = 'Doanh thu 14 ngày gần nhất';
       const map={};
@@ -597,14 +624,14 @@ function switchLookupTab(tab) {
         if(map[b.checkin]){map[b.checkin].rev+=b.total;map[b.checkin].nights+=b.nights;map[b.checkin].count++;}
       });
       Object.values(map).forEach(m=>{labels.push(m.label);values.push(m.rev);totalRev+=m.rev;totalNights+=m.nights;totalBook+=m.count;});
-
+ 
     } else {
       title.textContent = 'Doanh thu theo loại phòng';
       const rooms={'Phòng đơn':{rev:0,nights:0,count:0},'Phòng đôi':{rev:0,nights:0,count:0}};
       active.forEach(b=>{if(rooms[b.room]){rooms[b.room].rev+=b.total;rooms[b.room].nights+=b.nights;rooms[b.room].count++;}});
       Object.entries(rooms).forEach(([r,v])=>{labels.push(r);values.push(v.rev);totalRev+=v.rev;totalNights+=v.nights;totalBook+=v.count;});
     }
-
+ 
     const maxVal = Math.max(...values, 1);
     chart.innerHTML = values.map((v,i)=>`
       <div class="bar-col" title="${labels[i]}: ${v.toLocaleString('vi')}đ">
@@ -613,13 +640,13 @@ function switchLookupTab(tab) {
         </div>
         <div class="bar-label">${labels[i]}</div>
       </div>`).join('');
-
+ 
     summary.innerHTML = `
       <div class="summary-mini"><div class="summary-mini-val rev-green">${totalRev.toLocaleString('vi')}đ</div><div class="summary-mini-label">Doanh thu</div></div>
       <div class="summary-mini"><div class="summary-mini-val">${totalBook}</div><div class="summary-mini-label">Đặt phòng</div></div>
       <div class="summary-mini"><div class="summary-mini-val rev-gold">${totalNights}</div><div class="summary-mini-label">Số đêm</div></div>`;
   }
-
+ 
   function renderAdmin(){
     const rf=document.getElementById('filterRoom').value;
     const sf=document.getElementById('filterStatus').value;
@@ -644,7 +671,7 @@ function switchLookupTab(tab) {
         </tr>`).join('')}</tbody>
       </table>`;
   }
-
+ 
   async function changeStatus(id,status){
     const b=bookings.find(x=>x.id===id||x._id===id);
     if(b){
@@ -653,7 +680,7 @@ function switchLookupTab(tab) {
       renderStats();renderAdmin();renderCalendar();updateRoomAvailability();renderGantt();
     }
   }
-
+ 
   async function addPromo(){
     const from=document.getElementById('promoFrom').value;
     const to=document.getElementById('promoTo').value;
@@ -676,13 +703,13 @@ function switchLookupTab(tab) {
     checkTodayPromo();
     calcPrice();
   }
-
+ 
   async function deletePromo(id){
     promos=promos.filter(p=>p.id!==id&&p._id!==id);
     saveData();
     renderPromoList();checkTodayPromo();calcPrice();
   }
-
+ 
   function renderPromoList(){
     const el=document.getElementById('promoList');
     if(!promos.length){el.innerHTML='<div class="empty-state" style="padding:20px 0">Chưa có chương trình khuyến mãi nào</div>';return}
@@ -702,7 +729,7 @@ function switchLookupTab(tab) {
       </div>`;
     }).join('');
   }
-
+ 
   function checkTodayPromo(){
     const today=new Date().toISOString().split('T')[0];
     const active=promos.filter(p=>{
@@ -730,14 +757,14 @@ function switchLookupTab(tab) {
       }
     });
   }
-
+ 
   function toggleService(key){
     if(selectedServices[key]) delete selectedServices[key];
     else selectedServices[key]=1;
     document.getElementById('svc-'+key).classList.toggle('selected', !!selectedServices[key]);
     renderSelectedServices();
   }
-
+ 
   function renderSelectedServices(){
     const list=document.getElementById('selectedServicesList');
     const keys=Object.keys(selectedServices);
@@ -760,7 +787,7 @@ function switchLookupTab(tab) {
     document.getElementById('svcTotalRow').style.display='flex';
     document.getElementById('svcTotalVal').textContent=total.toLocaleString('vi')+'đ';
   }
-
+ 
   async function handleServiceBooking(){
     const name=document.getElementById('svcName').value.trim();
     const room=document.getElementById('svcRoom').value;
@@ -791,7 +818,7 @@ function switchLookupTab(tab) {
     ok.style.display='block';
     setTimeout(()=>ok.style.display='none',4000);
   }
-
+ 
   function renderAdminServices(){
     const el=document.getElementById('adminServices');
     if(!serviceOrders.length){el.innerHTML='<div class="empty-state">Chưa có đơn dịch vụ nào</div>';return}
@@ -813,7 +840,7 @@ function switchLookupTab(tab) {
       </tr>`).join('')}</tbody>
     </table>`;
   }
-
+ 
   async function changeSvcStatus(id,status){
     const o=serviceOrders.find(x=>x.id===id||x._id===id);
     if(o){
@@ -822,14 +849,14 @@ function switchLookupTab(tab) {
       renderAdminServices();
     }
   }
-
+ 
   function setStar(n){
     selectedStar=n;
     document.querySelectorAll('#starPicker span').forEach((s,i)=>{
       s.classList.toggle('active',i<n);
     });
   }
-
+ 
   async function submitReview(){
     const name=document.getElementById('rvName').value.trim();
     const text=document.getElementById('rvText').value.trim();
@@ -849,7 +876,7 @@ function switchLookupTab(tab) {
     ok.style.display='block';
     setTimeout(()=>ok.style.display='none',3000);
   }
-
+ 
   function renderReviews(){
     const grid=document.getElementById('reviewsGrid');
     if(!reviews.length){
@@ -867,7 +894,7 @@ function switchLookupTab(tab) {
       </div>`).join('');
     updateSummary();
   }
-
+ 
   function updateSummary(){
     const el=document.getElementById('reviewSummary');
     if(!reviews.length){
@@ -890,7 +917,7 @@ function switchLookupTab(tab) {
         <div class="rs-bar-count">${c}</div>
       </div>`).join('');
   }
-
+ 
   function renderAdminReviews(){
     const el=document.getElementById('adminReviews');
     if(!reviews.length){el.innerHTML='<div class="empty-state">Chưa có đánh giá nào</div>';return}
@@ -907,20 +934,20 @@ function switchLookupTab(tab) {
         <div class="arc-text">${r.text}</div>
       </div>`).join('');
   }
-
+ 
   async function deleteReview(id){
     reviews=reviews.filter(r=>r.id!==id&&r._id!==id);
     saveData();
     renderReviews(); renderAdminReviews();
   }
-
-
+ 
+ 
   // ===== COUPON CODE =====
   let coupons = JSON.parse(localStorage.getItem('hs_coupons') || '[]');
   let appliedCoupon = null;
-
+ 
   function saveCoupons() { localStorage.setItem('hs_coupons', JSON.stringify(coupons)); }
-
+ 
   function addCoupon() {
     const code = document.getElementById('cpCode').value.trim().toUpperCase();
     const percent = parseInt(document.getElementById('cpPercent').value);
@@ -935,13 +962,13 @@ function switchLookupTab(tab) {
     document.getElementById('cpLimit').value='';
     document.getElementById('cpExpiry').value='';
   }
-
+ 
   function deleteCoupon(id) {
     if(!confirm('Xoa ma giam gia nay?')) return;
     coupons = coupons.filter(c=>c.id!==id);
     saveCoupons(); renderCouponList();
   }
-
+ 
   function renderCouponList() {
     const el = document.getElementById('couponList');
     if(!el) return;
@@ -955,7 +982,7 @@ function switchLookupTab(tab) {
         <button onclick="deleteCoupon(${c.id})" style="background:#fee2e2;border:none;border-radius:6px;padding:5px 10px;color:#c0392b;cursor:pointer;font-size:12px">Xoa</button>
       </div>`).join('');
   }
-
+ 
   function applyCoupon() {
     const code = document.getElementById('couponInput').value.trim().toUpperCase();
     const okEl = document.getElementById('couponOk');
@@ -971,21 +998,21 @@ function switchLookupTab(tab) {
     okEl.style.display='block';
     calcPrice();
   }
-
+ 
   function removeCoupon() {
     appliedCoupon = null;
     document.getElementById('couponInput').value='';
     document.getElementById('couponOk').style.display='none';
     calcPrice();
   }
-
+ 
   // ===== GANTT =====
   let ganttStartDate = new Date();
-
+ 
   function ganttToday() { ganttStartDate = new Date(); renderGantt(); }
   function ganttPrev()  { ganttStartDate = new Date(ganttStartDate); ganttStartDate.setDate(ganttStartDate.getDate()-14); renderGantt(); }
   function ganttNext()  { ganttStartDate = new Date(ganttStartDate); ganttStartDate.setDate(ganttStartDate.getDate()+14); renderGantt(); }
-
+ 
   function renderGantt() {
     const el = document.getElementById('ganttBody');
     const labelEl = document.getElementById('ganttLabel');
@@ -994,11 +1021,11 @@ function switchLookupTab(tab) {
     const start = new Date(ganttStartDate);
     start.setDate(start.getDate() - 3);
     const today = new Date(); today.setHours(0,0,0,0);
-
+ 
     const days = [];
     for(let i=0;i<DAYS;i++){const d=new Date(start);d.setDate(d.getDate()+i);days.push(new Date(d));}
     if(labelEl) labelEl.textContent = days[0].toLocaleDateString('vi',{day:'2-digit',month:'2-digit'})+' – '+days[DAYS-1].toLocaleDateString('vi',{day:'2-digit',month:'2-digit'});
-
+ 
     const ROOMS = ['Phong don','Phong doi'];
     const ROOM_LABELS = {'Phong don':'Phòng đơn','Phong doi':'Phòng đôi'};
     const parseDate = s => {
@@ -1007,7 +1034,7 @@ function switchLookupTab(tab) {
       if(p.length===3) return new Date(+p[2],+p[1]-1,+p[0]);
       return new Date(s);
     };
-
+ 
     let html = '<table class="gantt-table"><thead><tr><th style="min-width:90px">Phòng</th>';
     days.forEach(d=>{
       const isToday=d.getTime()===today.getTime();
@@ -1015,7 +1042,7 @@ function switchLookupTab(tab) {
       html+=`<th style="${isToday?'background:rgba(201,168,76,0.3);':isWE?'color:var(--gold)':''}">${d.getDate()}/${d.getMonth()+1}</th>`;
     });
     html+='</tr></thead><tbody>';
-
+ 
     ['Phòng đơn','Phòng đôi'].forEach(room=>{
       const roomBk = bookings.filter(b=>b.room===room);
       const usedCols = new Set();
@@ -1043,14 +1070,14 @@ function switchLookupTab(tab) {
     html+='</tbody></table>';
     el.innerHTML=html;
   }
-
-
+ 
+ 
   // ===== CHÍNH SÁCH HỦY PHÒNG =====
   function togglePolicy() {
     const b=document.getElementById('policyBox');
     b.style.display=b.style.display==='none'?'block':'none';
   }
-
+ 
   // ===== ĐẶT PHÒNG ĐỊNH KỲ =====
   function toggleRecurring(){
     const b=document.getElementById('recurringBox');
@@ -1095,7 +1122,7 @@ function switchLookupTab(tab) {
     }
     return extra;
   }
-
+ 
   // ===== FAQ =====
   const FAQ_DATA=[
     {q:'Giờ nhận phòng và trả phòng là mấy giờ?',a:'Nhận phòng từ 14:00. Trả phòng trước 12:00 trưa. Nếu cần nhận sớm hoặc trả muộn, vui lòng liên hệ trước để sắp xếp.'},
@@ -1128,7 +1155,7 @@ function switchLookupTab(tab) {
     document.querySelectorAll('[id^="faqIcon_"]').forEach(el=>{el.style.transform='';el.textContent='+';});
     if(!isOpen){ans.style.maxHeight='300px';icon.style.transform='rotate(45deg)';icon.textContent='×';}
   }
-
+ 
   // ===== IN HÓA ĐƠN PDF =====
   function printInvoice(id){
     const b=bookings.find(x=>x.id===id||x._id===id);
@@ -1150,7 +1177,137 @@ function switchLookupTab(tab) {
     document.getElementById('printArea').style.display='block';
     setTimeout(()=>{window.print();document.getElementById('printArea').style.display='none';},200);
   }
+ // ================================================================
+  // TƯ VẤN PHÒNG BẰNG AI (Gemini, qua backend Node)
+  // ================================================================
 
+  // Tính số phòng còn trống cho 1 loại phòng trong khoảng ngày [ci, co)
+  function getAvailableRoomsForRange(room, ci, co){
+    if(!ci || !co) return ROOM_TOTAL[room];
+    const start = new Date(ci), end = new Date(co);
+    if(!(start < end)) return ROOM_TOTAL[room];
+    let maxBooked = 0;
+    for(let d = new Date(start); d < end; d.setDate(d.getDate()+1)){
+      const dStr = d.toISOString().split('T')[0];
+      const booked = bookings.filter(b =>
+        b.room === room && b.status !== 'cancel' &&
+        b.checkin <= dStr && b.checkout > dStr
+      ).length;
+      if(booked > maxBooked) maxBooked = booked;
+    }
+    return Math.max(0, ROOM_TOTAL[room] - maxBooked);
+  }
+
+  function getAvailabilitySnapshot(ci, co){
+    const snap = {};
+    Object.keys(ROOM_TOTAL).forEach(room => {
+      snap[room] = getAvailableRoomsForRange(room, ci, co);
+    });
+    return snap;
+  }
+
+  function checkAIConfigured(){
+    if(!AI_API_BASE){
+      alert('Tính năng AI chưa được cấu hình: cần điền AI_API_BASE (URL backend) trong js/main.js.');
+      return false;
+    }
+    return true;
+  }
+
+  function openAIPanel(){
+    document.getElementById('aiPanelOverlay').classList.add('open');
+  }
+  function closeAIPanel(){
+    document.getElementById('aiPanelOverlay').classList.remove('open');
+  }
+
+  function switchAITab(tab){
+    const isSuggest = tab === 'suggest';
+    document.getElementById('aiTabSuggest').style.display = isSuggest ? 'block' : 'none';
+    document.getElementById('aiTabChat').style.display = isSuggest ? 'none' : 'block';
+    document.getElementById('aiTabBtnSuggest').classList.toggle('active', isSuggest);
+    document.getElementById('aiTabBtnChat').classList.toggle('active', !isSuggest);
+  }
+
+  async function submitAISuggest(){
+    if(!checkAIConfigured()) return;
+    const guests = document.getElementById('aiGuests').value.trim();
+    const budget = document.getElementById('aiBudget').value.trim();
+    const needs = document.getElementById('aiNeeds').value.trim();
+    const checkin = document.getElementById('aiCheckin').value;
+    const checkout = document.getElementById('aiCheckout').value;
+    const resultEl = document.getElementById('aiSuggestResult');
+    const btn = document.getElementById('aiSuggestBtn');
+
+    if(!guests){
+      resultEl.textContent = 'Vui lòng nhập số lượng khách.';
+      return;
+    }
+
+    const availability = getAvailabilitySnapshot(checkin, checkout);
+
+    btn.disabled = true; btn.textContent = 'Đang phân tích...';
+    resultEl.textContent = '';
+    try{
+      const resp = await fetch(AI_API_BASE + '/api/ai/suggest', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ guests, budget, needs, checkin, checkout, availability })
+      });
+      const data = await resp.json();
+      if(!resp.ok) throw new Error(data.error || 'Lỗi không xác định');
+      resultEl.textContent = data.reply;
+    }catch(err){
+      resultEl.textContent = '⚠️ Không thể lấy tư vấn lúc này (' + err.message + '). Vui lòng thử lại sau.';
+    }finally{
+      btn.disabled = false; btn.textContent = '✨ Nhờ AI tư vấn';
+    }
+  }
+
+  let aiChatHistory = []; // {role:'user'|'model', text:'...'}
+
+  function appendAIChatBubble(text, who){
+    const box = document.getElementById('aiChatMessages');
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + (who === 'user' ? 'ai-msg-user' : 'ai-msg-bot');
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function sendAIChatMessage(){
+    if(!checkAIConfigured()) return;
+    const input = document.getElementById('aiChatInput');
+    const message = input.value.trim();
+    if(!message) return;
+
+    appendAIChatBubble(message, 'user');
+    aiChatHistory.push({role:'user', text: message});
+    input.value = '';
+
+    const ci = document.getElementById('gCheckin') ? document.getElementById('gCheckin').value : '';
+    const co = document.getElementById('gCheckout') ? document.getElementById('gCheckout').value : '';
+    const availability = getAvailabilitySnapshot(ci, co);
+
+    appendAIChatBubble('Đang trả lời...', 'bot');
+    const box = document.getElementById('aiChatMessages');
+
+    try{
+      const resp = await fetch(AI_API_BASE + '/api/ai/chat', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ message, history: aiChatHistory.slice(0,-1), availability })
+      });
+      const data = await resp.json();
+      box.removeChild(box.lastChild);
+      if(!resp.ok) throw new Error(data.error || 'Lỗi không xác định');
+      appendAIChatBubble(data.reply, 'bot');
+      aiChatHistory.push({role:'model', text: data.reply});
+    }catch(err){
+      box.removeChild(box.lastChild);
+      appendAIChatBubble('⚠️ Không thể trả lời lúc này (' + err.message + ').', 'bot');
+    }
+  }
   // ===== XUẤT EXCEL (CSV) =====
   function exportExcel(){
     const month=document.getElementById('exportMonth').value;
@@ -1174,8 +1331,8 @@ function switchLookupTab(tab) {
     a.href=url;a.download='BaoCao_HungSon_'+(month||'TatCa')+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();URL.revokeObjectURL(url);
   }
-
-
+ 
+ 
   // ================================================================
   // BẢO MẬT ADMIN - SHA-256 hashing + brute force protection
   // ================================================================
@@ -1185,24 +1342,24 @@ function switchLookupTab(tab) {
   const ADMIN_USER = 'admin';
   const ADMIN_PASS_HASH = 'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3'; // = "123"
   // Thay bằng hash của mật khẩu bạn muốn. VD: hashPassword('matkhau2024')
-
+ 
   let loginAttempts = parseInt(sessionStorage.getItem('hs_login_attempts')||'0');
   let lockUntil = parseInt(sessionStorage.getItem('hs_lock_until')||'0');
-
+ 
   async function sha256(message) {
     const msgBuffer = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
-
+ 
   async function hashPassword(pass) {
     const h = await sha256(pass);
     console.log('Hash của "'+pass+'" là:', h);
     return h;
   }
-
-
+ 
+ 
   async function changeAdminPassword() {
     const current = prompt('Nhập mật khẩu hiện tại:');
     if(!current) return;
@@ -1216,8 +1373,8 @@ function switchLookupTab(tab) {
     localStorage.setItem('hs_admin_hash', newHash);
     alert('✓ Đổi mật khẩu thành công!\nHash mới: '+newHash+'\nLưu hash này vào ADMIN_PASS_HASH trong file để dùng lâu dài.');
   }
-
-
+ 
+ 
   // ===== HAMBURGER MOBILE NAV =====
   function toggleMobileNav() {
     const nav = document.getElementById('mainNav');
@@ -1227,36 +1384,40 @@ function switchLookupTab(tab) {
   document.addEventListener('click', e => {
     if(e.target.closest('#mainNav a')) document.getElementById('mainNav').classList.remove('mobile-open');
   });
-
-
+ 
+ 
   function openPrivacy() { document.getElementById('privacyModal').classList.add('open'); }
   function closePrivacy() { document.getElementById('privacyModal').classList.remove('open'); }
-
+ 
 // ===== GALLERY =====
   const GALLERY_DATA = {
     single: {
       title: 'Phòng Đơn',
       slides: [
-        {icon:'🛏', label:'Giường đơn tiêu chuẩn', bg:'linear-gradient(135deg,#e8dcc8,#d4c4a0)'},
-        {icon:'🚿', label:'Phòng tắm riêng', bg:'linear-gradient(135deg,#dce8e8,#a0c4c4)'},
-        {icon:'❄️', label:'Điều hòa inverter', bg:'linear-gradient(135deg,#d8e8dc,#a0c4a8)'},
-        {icon:'📺', label:'TV & Wifi tốc độ cao', bg:'linear-gradient(135deg,#e0d8e8,#b8a8d0)'},
-        {icon:'🌿', label:'View sân vườn', bg:'linear-gradient(135deg,#dce8d0,#a8c4a0)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-1-1.webp', label:'Giường đơn tiêu chuẩn', icon:'🛏', bg:'linear-gradient(135deg,#e8dcc8,#d4c4a0)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-1.webp',   label:'Phòng tắm riêng', icon:'🚿', bg:'linear-gradient(135deg,#dce8e8,#a0c4c4)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-2-1.webp', label:'Điều hòa inverter', icon:'❄️', bg:'linear-gradient(135deg,#d8e8dc,#a0c4a8)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-3-1.webp', label:'TV & Wifi tốc độ cao', icon:'📺', bg:'linear-gradient(135deg,#e0d8e8,#b8a8d0)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-4-1.webp', label:'View sân vườn', icon:'🌿', bg:'linear-gradient(135deg,#dce8d0,#a8c4a0)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-5-2.webp', label:'Không gian & ánh sáng', icon:'💡', bg:'linear-gradient(135deg,#f0e7d6,#c9b98a)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-13-1 (1).webp', label:'Góc nhìn thư giãn', icon:'🛋️', bg:'linear-gradient(135deg,#e9d7e0,#c9a7b5)'},
       ]
     },
     double: {
       title: 'Phòng Đôi',
       slides: [
-        {icon:'🛏🛏', label:'2 giường đôi rộng rãi', bg:'linear-gradient(135deg,#c8d8e8,#a0b8cc)'},
-        {icon:'🛁', label:'Bồn tắm & vòi sen', bg:'linear-gradient(135deg,#ccd8e8,#a0b4d0)'},
-        {icon:'❄️', label:'Điều hòa inverter', bg:'linear-gradient(135deg,#d8e8dc,#a0c4a8)'},
-        {icon:'🖥', label:'Smart TV 43 inch', bg:'linear-gradient(135deg,#e0d8e8,#b8a8d0)'},
-        {icon:'🌅', label:'Ban công view núi', bg:'linear-gradient(135deg,#e8e0d0,#d0c0a0)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-1-1.webp', label:'2 giường đôi rộng rãi', icon:'🛏🛏', bg:'linear-gradient(135deg,#c8d8e8,#a0b8cc)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-1.webp',   label:'Phòng tắm & tiện nghi', icon:'🛁', bg:'linear-gradient(135deg,#ccd8e8,#a0b4d0)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-2-1.webp', label:'Điều hòa inverter', icon:'❄️', bg:'linear-gradient(135deg,#d8e8dc,#a0c4a8)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-3-1.webp', label:'Smart TV 43 inch', icon:'🖥', bg:'linear-gradient(135deg,#e0d8e8,#b8a8d0)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-4-1-786465c7-6d30-49c3-8b27-8bc1ca4cd438.webp', label:'Ban công view núi', icon:'🌅', bg:'linear-gradient(135deg,#e8e0d0,#d0c0a0)'},
+        {src:'assets/images/phong-superior-2-giuong-don-khach-san-phan-van-5-1.webp', label:'Góc nghỉ ngơi', icon:'🛌', bg:'linear-gradient(135deg,#e6f2ff,#b9d3ff)'},
+        {src:'assets/images/can-ho-2-phong-ngu-co-ban-cong-rieng-khach-san-phan-van-1.webp', label:'Chi tiết nội thất', icon:'🪑', bg:'linear-gradient(135deg,#f3efe6,#d1c4a3)'},
       ]
     }
   };
   let galleryCurrent = {type:'single', idx:0};
-
+ 
   function openGallery(type) {
     galleryCurrent = {type, idx:0};
     const data = GALLERY_DATA[type];
@@ -1265,37 +1426,49 @@ function switchLookupTab(tab) {
     document.getElementById('galleryOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
-
+ 
   function closeGallery() {
     document.getElementById('galleryOverlay').classList.remove('open');
     document.body.style.overflow = '';
   }
-
+ 
   function renderGallery() {
     const {type, idx} = galleryCurrent;
     const slides = GALLERY_DATA[type].slides;
     const slide = slides[idx];
     const main = document.getElementById('galleryMain');
     main.style.background = slide.bg;
-    main.innerHTML = `<div style="text-align:center"><div style="font-size:72px;margin-bottom:12px">${slide.icon}</div><div style="color:#555;font-size:14px;font-weight:500">${slide.label}</div></div>`;
+    if(slide.src){
+      main.innerHTML = `
+        <div class="gallery-img-wrap">
+          <img class="gallery-img" alt="${slide.label}" src="${slide.src}" />
+          <div class="gallery-caption">
+            <span class="gallery-caption-icon">${slide.icon}</span>
+            <span class="gallery-caption-text">${slide.label}</span>
+          </div>
+        </div>
+      `;
+    } else {
+      main.innerHTML = `<div style="text-align:center"><div style="font-size:72px;margin-bottom:12px">${slide.icon}</div><div style="color:#555;font-size:14px;font-weight:500">${slide.label}</div></div>`;
+    }
     const thumbs = document.getElementById('galleryThumbs');
     thumbs.innerHTML = slides.map((s,i) => `
       <div class="gallery-thumb ${i===idx?'active':''}" onclick="galleryCurrent.idx=${i};renderGallery()"
         style="background:${s.bg}">${s.icon}</div>`).join('');
   }
-
+ 
   function galleryNext() { const s=GALLERY_DATA[galleryCurrent.type].slides; galleryCurrent.idx=(galleryCurrent.idx+1)%s.length; renderGallery(); }
   function galleryPrev() { const s=GALLERY_DATA[galleryCurrent.type].slides; galleryCurrent.idx=(galleryCurrent.idx-1+s.length)%s.length; renderGallery(); }
   document.addEventListener('keydown', e => { if(!document.getElementById('galleryOverlay').classList.contains('open')) return; if(e.key==='ArrowRight') galleryNext(); if(e.key==='ArrowLeft') galleryPrev(); if(e.key==='Escape') closeGallery(); });
-
+ 
 const COMBOS = {
     sleep:   {room:'Phòng đơn', nights:1, price:180000, label:'Combo Nghỉ Ngơi'},
     family:  {room:'Phòng đôi', nights:1, price:308000, label:'Combo Gia Đình'},
     explore: {room:'Phòng đơn', nights:2, price:450000, label:'Combo Khám Phá'},
     vip:     {room:'Phòng đôi', nights:2, price:750000, label:'Combo Nghỉ Dưỡng'},
   }
-
-
+ 
+ 
   function saveNote(id) {
     const b = bookings.find(x=>x.id===id||x._id===id);
     if(!b) return;
@@ -1304,5 +1477,6 @@ const COMBOS = {
     const el = document.getElementById('noteSaved_'+id);
     if(el){el.style.display='inline';setTimeout(()=>el.style.display='none',1500);}
   }
-
+ 
   init();
+ 
